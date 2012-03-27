@@ -1,9 +1,9 @@
 #
 # Cookbook Name:: sbuild
-# Definition:: sbuild_lv
+# Provider:: build_environment
 #
 # Author:: Joshua Timberman <joshua@opscode.com>
-# Copyright 2010, Opscode, Inc. <legal@opscode.com>
+# Copyright 2010-2012, Opscode, Inc. <legal@opscode.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,26 +17,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-define :sbuild_lv, :distro => nil, :vg => "buildvg", :release => "unstable" do
+action :create do
 
   include_recipe "sbuild"
   include_recipe "lvm"
   include_recipe "xfs"
 
-  params['distro'] ||= node['platform']
-  vg = params['vg']
-  chroot_lv = "#{params['name']}_chroot"
-  chroot_path = "/dev/#{vg}/#{chroot_lv}"
-  chroot_name = "#{params['name']}"
+  chroot_lv = "#{new_resource.name}_chroot"
+  chroot_path = "/dev/#{new_resource.vg}/#{chroot_lv}"
+  chroot_name = new_resource.name
   lv_size = node['sbuild']['lv_size']
   snapshot_size = node['sbuild']['snapshot_size']
 
-  case params['distro']
+  case new_resource.distro
   when "ubuntu"
-    mirror = params['mirror'] ? params['mirror'] : "http://archive.ubuntu.com/ubuntu"
+    mirror = new_resource.mirror ? new_resource.mirror : "http://archive.ubuntu.com/ubuntu"
     components = "main restricted universe multiverse"
   when "debian"
-    mirror = params['mirror'] ? params['mirror'] : "http://ftp.debian.org/debian"
+    mirror = new_resource.mirror ? new_resource.mirror : "http://ftp.debian.org/debian"
     components = "main non-free contrib"
   else
     log "This node's platform is not supported for sbuild!" do
@@ -44,7 +42,7 @@ define :sbuild_lv, :distro => nil, :vg => "buildvg", :release => "unstable" do
     end
   end
 
-  execute "/sbin/lvcreate -n '#{chroot_lv}' -L '#{lv_size}' '#{vg}'" do
+  execute "/sbin/lvcreate -n '#{chroot_lv}' -L '#{lv_size}' '#{new_resource.vg}'" do
     not_if "/sbin/lvdisplay -c #{chroot_path}"
   end
 
@@ -59,7 +57,7 @@ define :sbuild_lv, :distro => nil, :vg => "buildvg", :release => "unstable" do
     mode 0640
     backup false
     variables(
-      :vg => vg,
+      :vg => new_resource.vg,
       :chroot_name => chroot_name,
       :chroot_lv => chroot_lv,
       :snapshot_size => snapshot_size
@@ -73,9 +71,9 @@ define :sbuild_lv, :distro => nil, :vg => "buildvg", :release => "unstable" do
     mode 0750
     backup false
     variables(
-      :vg => vg,
-      :distro => params['distro'],
-      :release => params['name'],
+      :vg => new_resource.vg,
+      :distro => new_resource.distro,
+      :release => new_resource.name,
       :chroot_path => chroot_path,
       :chroot_name => chroot_name,
       :chroot_lv => chroot_lv,
@@ -84,4 +82,6 @@ define :sbuild_lv, :distro => nil, :vg => "buildvg", :release => "unstable" do
       :components => components
     )
   end
+
+  new_resource.updated_by_last_action(true)
 end

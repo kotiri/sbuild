@@ -1,9 +1,9 @@
 #
 # Cookbook Name:: sbuild
-# Recipe:: schroots
+# Resource:: build_environment
 #
 # Author:: Joshua Timberman <joshua@opscode.com>
-# Copyright 2010, Opscode, Inc. <legal@opscode.com>
+# Copyright 2010-2012, Opscode, Inc. <legal@opscode.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,16 +17,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-sbuild_build_environment "sid" do
-  release "sid"
-end
+actions :create
 
-sbuild_build_environment "karmic" do
-  distro "ubuntu"
-  release "karmic"
-end
+attribute :name, :kind_of => String, :name_attribute => true
+attribute :distro, :kind_of => String, :default => node['platform']
+attribute :vg, :kind_of => String
+attribute :release, :kind_of => String, :default => "unstable"
+attribute :mirror, :kind_of => String, :default => nil
 
-sbuild_build_environment "lucid" do
-  distro "ubuntu"
-  release "lucid"
+def initialize(*args)
+  super
+  @action = :create
 end
