@@ -20,8 +20,8 @@
 actions :create
 
 attribute :name, :kind_of => String, :name_attribute => true
-attribute :distro, :kind_of => String, :default => node['platform']
-attribute :vg, :kind_of => String
+attribute :distro, :kind_of => String, :default => nil
+attribute :vg, :kind_of => String, :default => "buildvg"
 attribute :release, :kind_of => String, :default => "unstable"
 attribute :mirror, :kind_of => String, :default => nil
 

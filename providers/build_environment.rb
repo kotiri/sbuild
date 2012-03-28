@@ -19,17 +19,14 @@
 
 action :create do
 
-  include_recipe "sbuild"
-  include_recipe "lvm"
-  include_recipe "xfs"
-
+  distro = new_resource.distro ? new_resource.distro : node['platform']
   chroot_lv = "#{new_resource.name}_chroot"
   chroot_path = "/dev/#{new_resource.vg}/#{chroot_lv}"
   chroot_name = new_resource.name
   lv_size = node['sbuild']['lv_size']
   snapshot_size = node['sbuild']['snapshot_size']
 
-  case new_resource.distro
+  case distro
   when "ubuntu"
     mirror = new_resource.mirror ? new_resource.mirror : "http://archive.ubuntu.com/ubuntu"
     components = "main restricted universe multiverse"
@@ -72,7 +69,7 @@ action :create do
     backup false
     variables(
       :vg => new_resource.vg,
-      :distro => new_resource.distro,
+      :distro => distro,
       :release => new_resource.name,
       :chroot_path => chroot_path,
       :chroot_name => chroot_name,
